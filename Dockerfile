@@ -33,6 +33,7 @@ ARG PKG_MANAGER
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 
 # Install dependencies based on package manager
+# hadolint ignore=DL3060
 RUN --mount=type=cache,id=npm,target=/root/.npm \
     --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
@@ -77,10 +78,11 @@ RUN node ace build
 
 # Install production-only dependencies in the build output
 ARG PKG_MANAGER
+WORKDIR /app/build
+# hadolint ignore=DL3060
 RUN --mount=type=cache,id=npm,target=/root/.npm \
     --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     --mount=type=cache,id=yarn,target=/usr/local/share/.cache/yarn \
-    cd build && \
     if [ "$PKG_MANAGER" = "pnpm" ]; then \
       pnpm install --prod; \
     elif [ "$PKG_MANAGER" = "yarn" ]; then \
