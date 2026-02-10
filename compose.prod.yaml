@@ -1,0 +1,55 @@
+# Production environment override
+# Usage: docker compose -f compose.yaml -f compose.prod.yaml up -d
+
+services:
+  app:
+    build:
+      context: .
+      target: prod
+      args:
+        PKG_MANAGER: ${PKG_MANAGER:-npm}
+    environment:
+      NODE_ENV: production
+    deploy:
+      replicas: ${APP_REPLICAS:-1}
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  postgres:
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  mysql:
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  mssql:
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M

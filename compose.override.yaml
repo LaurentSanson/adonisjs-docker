@@ -1,0 +1,33 @@
+# Development environment override
+# This file is automatically loaded by Docker Compose
+
+services:
+  app:
+    build:
+      context: .
+      target: dev
+      args:
+        PKG_MANAGER: ${PKG_MANAGER:-npm}
+    volumes:
+      # Mount source code for hot reloading
+      - .:/app
+    environment:
+      NODE_ENV: development
+    # Enable stdin for debugging
+    stdin_open: true
+    tty: true
+
+  postgres:
+    ports:
+      # Expose PostgreSQL port for local development tools
+      - "${POSTGRES_PORT:-5432}:5432"
+
+  mysql:
+    ports:
+      # Expose MySQL port for local development tools
+      - "${MYSQL_PORT:-3306}:3306"
+
+  mssql:
+    ports:
+      # Expose MSSQL port for local development tools
+      - "${MSSQL_PORT:-1433}:1433"
