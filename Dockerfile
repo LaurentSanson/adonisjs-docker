@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # Build arguments
-ARG NODE_VERSION=22
+ARG NODE_VERSION=24
 ARG PKG_MANAGER=npm
 
 # ==============================================================================
@@ -29,6 +29,10 @@ FROM base AS deps
 
 ARG PKG_MANAGER
 
+# Pre-install package manager to avoid corepack interactive prompt
+RUN if [ "$PKG_MANAGER" = "pnpm" ]; then corepack prepare pnpm@latest --activate; \
+    elif [ "$PKG_MANAGER" = "yarn" ]; then corepack prepare yarn@stable --activate; fi
+
 # Copy lock files (whichever exists for the chosen package manager)
 COPY package.json package-lock.json* pnpm-lock.yaml* yarn.lock* ./
 
@@ -50,6 +54,10 @@ RUN --mount=type=cache,id=npm,target=/root/.npm \
 # ==============================================================================
 FROM base AS dev
 
+ARG PKG_MANAGER=npm
+RUN if [ "$PKG_MANAGER" = "pnpm" ]; then corepack prepare pnpm@latest --activate; \
+    elif [ "$PKG_MANAGER" = "yarn" ]; then corepack prepare yarn@stable --activate; fi
+
 ENV NODE_ENV=development
 
 # Copy entrypoint script
@@ -59,8 +67,8 @@ RUN chmod +x /usr/local/bin/docker-entrypoint
 # Expose port (AdonisJS default)
 EXPOSE 3333
 
-# Health check (start-period allows time for project creation and dependency installation)
-HEALTHCHECK --interval=10s --timeout=5s --start-period=180s --retries=3 \
+# Health check
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=3 \
     CMD curl -f http://localhost:${PORT:-3333}/health || curl -f http://localhost:${PORT:-3333}/ || exit 1
 
 ENTRYPOINT ["docker-entrypoint"]
